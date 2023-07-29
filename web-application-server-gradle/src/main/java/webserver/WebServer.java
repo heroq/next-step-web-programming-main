@@ -17,7 +17,6 @@ public class WebServer {
         } else {
             port = Integer.parseInt(args[0]);
         }
-
         // 서버소켓을 생성한다. 웹서버는 기본적으로 8080번 포트를 사용한다.
 
         try (ServerSocket listenSocket = new ServerSocket(port)) {
@@ -25,6 +24,11 @@ public class WebServer {
 
             // 클라이언트가 연결될때까지 대기한다.
             Socket connection;
+
+            /***
+             * while가 반복문 종료가 안되는 이유
+             * accept가 blocking method이기 때문에 대기 상태여서 그렇다.
+             */
             while ((connection = listenSocket.accept()) != null) {
                 RequestHandler requestHandler = new RequestHandler(connection);
                 requestHandler.start();
