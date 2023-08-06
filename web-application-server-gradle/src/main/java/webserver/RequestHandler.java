@@ -32,7 +32,6 @@ public class RequestHandler extends Thread {
             BufferedReader ins = new BufferedReader(new InputStreamReader(in));
 
             // 1단계
-            System.out.println("1단계");
             String firstLine = ins.readLine();
 
             if(ins.readLine() == null) return;
@@ -41,14 +40,9 @@ public class RequestHandler extends Thread {
             String getHeader;
             while(!"".equals(getHeader = ins.readLine())){
                 String[] data = getHeader.split(":");
-                System.out.println(getHeader);
                 header.put(data[0], data[1].trim());
                 if("".equals(ins.readLine())) break;
             }
-
-            //System.out.println("Accept:");
-            //System.out.println(header.get("Accept"));
-            //System.out.println(header.get("Sec-Fetch-Dest"));
 
             // 2단계
             String address = firstLine.split(" ")[1];
@@ -58,35 +52,20 @@ public class RequestHandler extends Thread {
             DataOutputStream dos = new DataOutputStream(out);
             byte[] body = Files.readAllBytes(Paths.get(dir + "/webapp" + address));
 
-            // response200Header(dos, body.length);
-            response200Header(dos, body.length, header.getOrDefault("Accept", "html"));
+            response200Header(dos, body.length, address);
             responseBody(dos, body);
         } catch (IOException e) {
             log.error(e.getMessage());
         }
     }
 
-    private void response200Header(DataOutputStream dos, int lengthOfBodyContent) {
-        try {
-            dos.writeBytes("HTTP/1.1 200 OK \r\n");
-
-            dos.writeBytes("Content-Type: text/html;charset=utf-8\r\n");
-            dos.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
-            dos.writeBytes("\r\n");
-        } catch (IOException e) {
-            log.error(e.getMessage());
-        }
-    }
-
-    // 임시로 만든 헤더
     private void response200Header(DataOutputStream dos, int lengthOfBodyContent, String type) {
         try {
             dos.writeBytes("HTTP/1.1 200 OK \r\n");
 
-            // 여기서 css, script, html 체크 하는건가본데?
-            // script 체크 하는법 확인 해야함
-            if(type.contains("script")) dos.writeBytes("Content-Type: text/script;charset=utf-8\r\n");
-            else if(type.contains("text/css")) dos.writeBytes("Content-Type: text/css;charset=utf-8\r\n");
+            // 파일의 확장자로 체크하여 응답
+            if(type.contains(".js")) dos.writeBytes("Content-Type: text/script;charset=utf-8\r\n");
+            else if(type.contains(".css")) dos.writeBytes("Content-Type: text/css;charset=utf-8\r\n");
             else dos.writeBytes("Content-Type: text/html;charset=utf-8\r\n");
 
             dos.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
