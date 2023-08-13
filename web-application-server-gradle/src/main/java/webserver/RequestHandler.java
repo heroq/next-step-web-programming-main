@@ -47,6 +47,7 @@ public class RequestHandler extends Thread {
             String address = firstLine.split(" ")[1];
             String method = firstLine.split(" ")[0];
 
+            // 코드 중복 너무 많어
             if("GET".equals(method)){
                 int addressParameterLength = address.indexOf('?');
                 if(addressParameterLength == -1) {
@@ -58,13 +59,16 @@ public class RequestHandler extends Thread {
                     String[] getParameter = address.split("\\?");
                     Map temp = HttpRequestUtils.parseQueryString(getParameter[1]);
                     User user = new User(temp.get("userId").toString(), temp.get("password").toString(), temp.get("name").toString(), temp.get("email").toString());
+                    response302Header(out, "/index.html");
+                    return;
                 }
             } else if("POST".equals(method)){
                 if("/user/create".equals(address)){
                     String getParameter = IOUtils.readData(ins, Integer.parseInt(header.get("Content-Length")));
                     Map temp = HttpRequestUtils.parseQueryString(getParameter);
                     User user = new User(temp.get("userId").toString(), temp.get("password").toString(), temp.get("name").toString(), temp.get("email").toString());
-                    System.out.println(user);
+                    response302Header(out, "/index.html");
+                    return;
                 }
             }
             response(out, address);
@@ -92,6 +96,17 @@ public class RequestHandler extends Thread {
             else dos.writeBytes("Content-Type: text/html;charset=utf-8\r\n");
 
             dos.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
+            dos.writeBytes("\r\n");
+        } catch (IOException e) {
+            log.error(e.getMessage());
+        }
+    }
+
+    private void response302Header(OutputStream out, String location) {
+        DataOutputStream dos = new DataOutputStream(out);
+        try {
+            dos.writeBytes("HTTP/1.1 302 Found \r\n");
+            dos.writeBytes("Location: " + location + "\r\n");
             dos.writeBytes("\r\n");
         } catch (IOException e) {
             log.error(e.getMessage());
